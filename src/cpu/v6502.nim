@@ -14,6 +14,8 @@ const NIRQ  = 103  # interrupt
 const NRES  = 159  # reset
 const NRW   = 1156 # read/write
 
+const NODE_DEFS = 1725
+
 const debug = false
 
 #
@@ -60,7 +62,7 @@ proc `$`(o: Node): string =
 # Globals
 #
 var gTransistorTable = newOrderedTable[int, Transistor]()
-var gNodeDefs: array[1725, Node]
+var gNodeDefs: array[NODE_DEFS, Node]
 var gGndNode: Node
 var gPwrNode: Node
 var gRecalcNodeGroup = newSeq[Node]()
@@ -221,7 +223,7 @@ proc setHigh(node: var Node) =
   recalcNodeList(list)
 
 proc reset() =
-  for i in 0..1724:
+  for i in 0..<NODE_DEFS:
     if not isNil(gNodeDefs[i]):
       gNodeDefs[i].state = false
       gNodeDefs[i].inNodeGroup = false
@@ -250,7 +252,7 @@ proc reset() =
     echo "clk0 start 2 " & $gNodeDefs[1155].state & ", " & $gNodeDefs[558].state & ", " & $gNodeDefs[252].state
 
   var allNodes = newOrderedTable[int, Node]()
-  for i in 0..1724:
+  for i in 0..<NODE_DEFS:
     if not isNil(gNodeDefs[i]):
       allNodes[gNodeDefs[i].id] = gNodeDefs[i]
   recalcNodeList(allNodes)
