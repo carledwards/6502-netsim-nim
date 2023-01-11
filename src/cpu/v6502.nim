@@ -1,10 +1,7 @@
 import constructor/constructor
 import std/tables
 import chipdefs
-import std/monotimes
 import std/math
-
-from times import inMilliseconds
 
 const
   NGND  = 558  # vss
@@ -395,24 +392,3 @@ proc halfStep*(t: var Cpu) =
   else:
     t.setHigh(clk0)
     t.handleBusWrite()
-
-#
-# Below is for performance/acceptance testing
-#
-proc readFromBus(busAddress: int): uint8 =
-  #echo "readFromBus ", busAddress
-  0xEA
-
-proc writeToBus(busAddress: int, data: uint8) =
-  #echo "writeToBus ", busAddress
-  discard
-
-when isMainModule:
-  var cpu = Cpu.init(readFromBus, writeToBus)
-  cpu.reset()
-  when not debug:
-    let strt = getMonotime()
-    for i in (0 .. 10000):
-      cpu.halfStep()
-    let elpsd = (getMonotime() - strt).inMilliseconds
-    echo "elapsed time: ", elpsd
