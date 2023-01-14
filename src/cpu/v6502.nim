@@ -136,41 +136,43 @@ const addressLineVals = [
   A15 : 195
 ]
 
+template withDefinition(name: string, definitionFS: FileStream, columns: int, body: untyped) =
+  var x : CsvParser
+  open(x, definitionFS, name)
+  type
+    rowArray = array[0..(columns-1), int]
+  var row {.inject.}: rowArray
+  while readRow(x):
+    if len(x.row) < columns:
+      continue
+    if x.row[0].startsWith("#"):
+      continue
+    for i, v in row:
+      row[i] = parseInt(strip(x.row[i]))
+    body
+  close(x)
+
 #
 # Procedures
 #
 proc setupTransistors(t: var Cpu, definitionFS: FileStream) =
-  var x: CsvParser
-  open(x, definitionFS, "transdef")
-  while readRow(x):
-    if len(x.row) < 4:
-      continue
-    if x.row[0].startsWith("#"):
-      continue
-    var c1 = parseInt(strip(x.row[2]))
-    var c2 = parseInt(strip(x.row[3]))
+  withDefinition("transdefs", definitionFS, 4):
+    var c1 = row[2]
+    var c2 = row[3]
     if c1 == NGND:
       c1 = c2
       c2 = NGND
     if c1 == NPWR:
       c1 = c2
       c2 = NPWR
-    var trans = Transistor.init(parseInt(strip(x.row[0])), parseInt(strip(x.row[1])), c1, c2)
+    var trans = Transistor.init(row[0], row[1], c1, c2)
     t.transistorTable[trans.id] = trans
-  close(x)
 
 proc setupNodes(t: var Cpu, definitionFS: FileStream) =
-  var x: CsvParser
-  open(x, definitionFS, "transdef")
-  while readRow(x):
-    if len(x.row) < 2:
-      continue
-    if x.row[0].startsWith("#"):
-      continue
-    if isNil(t.nodeDefs[parseInt(strip(x.row[0]))]):
-      var node = Node.init(parseInt(strip(x.row[0])), false, bool(parseInt(strip(x.row[1]))))
+  withDefinition("segdefs", definitionFS, 2):
+    if isNil(t.nodeDefs[row[0]]):
+      var node = Node.init(row[0], false, bool(row[1]))
       t.nodeDefs[node.id] = node
-  close(x)
 
 proc connectTransistors(t: var Cpu) =
   for key, trans in t.transistorTable:
