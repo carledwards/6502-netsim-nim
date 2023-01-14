@@ -1,7 +1,9 @@
 import constructor/constructor
 import std/tables
-import chipdefs
 import std/math
+import std/streams
+import std/parsecsv
+import strutils
 
 const
   NGND  = 558  # vss
@@ -137,24 +139,38 @@ const addressLineVals = [
 #
 # Procedures
 #
-proc setupTransistors(t: var Cpu) =
-  for item in transdefs:
-    var c1 = item[2]
-    var c2 = item[3]
+proc setupTransistors(t: var Cpu, definitionFS: FileStream) =
+  var x: CsvParser
+  open(x, definitionFS, "transdef")
+  while readRow(x):
+    if len(x.row) < 4:
+      continue
+    if x.row[0].startsWith("#"):
+      continue
+    var c1 = parseInt(strip(x.row[2]))
+    var c2 = parseInt(strip(x.row[3]))
     if c1 == NGND:
       c1 = c2
       c2 = NGND
     if c1 == NPWR:
       c1 = c2
       c2 = NPWR
-    var trans = Transistor.init(item[0], item[1], c1, c2)
+    var trans = Transistor.init(parseInt(strip(x.row[0])), parseInt(strip(x.row[1])), c1, c2)
     t.transistorTable[trans.id] = trans
+  close(x)
 
-proc setupNodes(t: var Cpu) =
-  for item in segdefs:
-    if isNil(t.nodeDefs[item[0]]):
-      var node = Node.init(item[0], false, bool(item[1]))
+proc setupNodes(t: var Cpu, definitionFS: FileStream) =
+  var x: CsvParser
+  open(x, definitionFS, "transdef")
+  while readRow(x):
+    if len(x.row) < 2:
+      continue
+    if x.row[0].startsWith("#"):
+      continue
+    if isNil(t.nodeDefs[parseInt(strip(x.row[0]))]):
+      var node = Node.init(parseInt(strip(x.row[0])), false, bool(parseInt(strip(x.row[1]))))
       t.nodeDefs[node.id] = node
+  close(x)
 
 proc connectTransistors(t: var Cpu) =
   for key, trans in t.transistorTable:
@@ -162,11 +178,11 @@ proc connectTransistors(t: var Cpu) =
     t.nodeDefs[trans.c1NodeId].c1c2Transistors.add(trans)
     t.nodeDefs[trans.c2NodeId].c1c2Transistors.add(trans)
 
-proc init*(T: typedesc[Cpu], readFromBusProc: ReadFromBusProc, writeToBusProc: WriteToBusProc): Cpu {.constr.} =
+proc init*(T: typedesc[Cpu], readFromBusProc: ReadFromBusProc, writeToBusProc: WriteToBusProc, transDefsFS: FileStream, segDefsFS: FileStream): Cpu {.constr.} =
   result.transistorTable = OrderedTable[int, Transistor]()
   result.recalcNodeGroup = newSeq[Node]()
-  result.setupTransistors()
-  result.setupNodes()
+  result.setupTransistors(transDefsFS)
+  result.setupNodes(segDefsFS)
   result.connectTransistors()
   result.readFromBusProc = readFromBusProc
   result.writeToBusProc = writeToBusProc

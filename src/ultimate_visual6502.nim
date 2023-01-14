@@ -1,6 +1,7 @@
 import motherboard
 import std/monotimes
 from times import inMilliseconds
+from std/streams import newFileStream
 
 var app_code = [
     0xA9, 0x50,         # lda #$FF
@@ -10,7 +11,10 @@ var app_code = [
 ]
 
 when isMainModule:
-  var m = Motherboard.init()
+  let transDefsFS = newFileStream("transdefs.txt", fmRead)
+  let segDefsFS = newFileStream("segdefs.txt", fmRead)
+
+  var m = Motherboard.init(transDefsFS, segDefsFS)
 
   # initialize the rom with our application
   for i, v in app_code:
