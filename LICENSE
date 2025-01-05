@@ -2,6 +2,14 @@ MIT License
 
 Copyright (c) 2022 Carl Edwards
 
+This project includes work derived from visual6502 (www.visual6502.org),
+originally created by Greg James, Brian Silverman, and Barry Silverman.
+Original work available at: https://github.com/trebonian/visual6502
+Original work was licensed under Creative Commons Attribution-NonCommercial-ShareAlike 3.0:
+http://creativecommons.org/licenses/by-nc-sa/3.0/
+
+Copyright (c) 2022 Carl Edwards
+
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
 in the Software without restriction, including without limitation the rights
